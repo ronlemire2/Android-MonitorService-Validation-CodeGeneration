@@ -1,0 +1,49 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string packageName = "dev.ronlemire.personprovider";
+   string authorityName = "dev.ronlemire.personprovider.PersonProvider";
+   string tableName = "Person";
+   string tableNameLower = "person";
+   string tableNameUpper = "PERSON";
+#>
+package <#= packageName #>;
+
+import android.net.Uri;
+
+public class <#= tableName #>ProviderMetaData {
+    public static final String AUTHORITY = "<#= authorityName #>";
+    
+    private <#= tableName #>ProviderMetaData() {}
+    //inner class describing columns and their types
+    public static final class <#= tableName #>TableMetaData 
+    {
+        private <#= tableName #>TableMetaData() {}
+        public static final String TABLE_NAME = "datatypes";
+
+        //uri and mime type definitions
+        public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/<#= tableNameLower #>");
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.androidbook.<#= tableNameLower #>";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.androidbook.<#= tableNameLower #>";
+
+        //Additional Columns start here.
+<#
+	PushIndent("\t\t\t");
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("public static final String {0}_{1} = \"{2}\";", tableNameUpper, column.Name.ToUpper(), column.Name));
+   }                                                                                 
+   PopIndent();
+#>
+    }
+}

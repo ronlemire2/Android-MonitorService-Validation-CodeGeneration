@@ -1,0 +1,26 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#
+   string entityName = "Person";
+   string entityInstanceName = "person";
+   string tableName = "Person";
+   string beLibraryName = "PersonBusinessEntities";
+   string blLibraryName = "PersonBusinessLogic";
+   string primaryKeyName = "Id";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <#= beLibraryName #>;
+
+namespace <#= blLibraryName #>
+{
+   public interface I<#= tableName #>Service : IServiceBase
+   {
+      List<<#= entityName #>View> Get<#= entityName #>ViewList();
+      <#= entityName #>View Get<#= entityName #>View(int  <#= primaryKeyName #>);
+      int Save<#= entityName #>(<#= entityName #>View <#= entityInstanceName #>View);
+      int Delete<#= entityName #>(int <#= primaryKeyName #>);
+   }
+}

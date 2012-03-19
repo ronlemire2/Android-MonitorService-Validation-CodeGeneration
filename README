@@ -1,0 +1,112 @@
+================================================================================
+Summary
+================================================================================
+1) Android project called MonitorService that runs in the background to detect
+changes in one of our ContentProviders and notify user when changes happen.
+2) Android project called Validation to do simple form validation using regular
+expressions. 
+3) Update to last week's CodeGeneration project to correct a few deficiencies
+in our generic List on the left and Details on the right project template.
+4) New CodeGeneration project to generate backend code (DA, BL, BE, WS) and  
+client side ContentProvider for a single table database called Person.
+
+================================================================================
+MonitorService
+================================================================================
+One of Android's main components that we haven't seen yet is Services. Services 
+run in the background (similiar to Windows Services). They normally do not have 
+a UI but for this demo I have a UI that starts and stops a service called 
+MonitorService. Also, Services by default run on the UI thread but our app will
+use an IntentService that creates its own thread automatically to do its work.
+
+Remember that a few weeks ago we created a ContentProvider called ConfigProvider
+which wraps a SqlLite database of configuration settings. MonitorService is 
+going to run in the background and notify the user when another application 
+makes changes to ConfigDB. My check for changes is defined as a change in the 
+number of rows in the Settings table. It's not real life because if 2 changes 
+(e.g. a delete and an add occur between the interval) then by my definition 
+there is no changes. But I'm just making things simple here. 
+
+Here's how MonitorService works (see Docs->Screenshots for the UI):
+	1) MonitorService UI has a dropdown to select the time interval. Every 
+		time the interval is up, MonitorService will get a count of the rows 
+		in ConfigDB->Settings table.
+	2) StartButton creates a timer using the AlarmManager with the interval
+		value. 
+	3) On the interval, an IntentService called MonitorService will be created.
+		Note that MonitorService is not running all the time. When the interval
+		is up, MonitorService is created, does its work on its own thread, 
+		and then dies. That's how an IntentService works. There are ways to 
+		create a Service once and have it runs continously but that's not 
+		the case here.
+	4) MonitorService's work is to use the ConfigProvider to get the count of
+		rows in the Settings table. It stores that count in a static variable.
+		On each interval, a new instance is made of MonitorService that checks
+		the current number of rows against the static variable's number of 
+		rows.
+	5) If the row count changes, a user Notification is sent. The user sees
+		the notifications as a little icon in notification area labeled 
+		'talk'.
+	6) The user drags the notification area to see the notification. The user
+		presses	the notification. This will automatically start up the  
+		ConfigAdmin application for the user to see the change. This is 
+		another case of one application (i.e. MonitorService UI) starting 
+		another application (i.e. ConfigAdmin).
+		
+Although not completely realistic, the MonitorService app does demonstrate 
+how we can:
+	1) Use a background service to detect changes in other parts of the
+		system 
+	2) Alert the user with a notification
+	3) Tie the notification to starting another application
+
+Very cool decoupling stuff that has many applications.	
+	
+================================================================================
+Validation
+================================================================================
+So far we have not done any validation on the data the user enters into our
+Fragments. This Android project demonstrates 3 ways to help validate forms:
+	1) Data entry hints
+	2) android:inputType attributes to present different keyboard arrangements
+		for different types of data
+	3) Actual data validation using Regular Expressions
+This is only a starter application which will develop as time goes on.
+	
+================================================================================
+SamplesTemplate (Generic List on left and Details on right UI template)
+================================================================================
+A common layout for data entry applications is to have a list of options in 
+a Left-Side pane and when an option is selected to present a details form in
+the Right-Side pane. Last week's CommonControls application had a list of 
+controls on the left and a sample of each presented in the right-side pane.
+I created an Android project called SamplesTemplate that has this left-side 
+right-side model. It can be copied and with a few changes be a starter for 
+an app that uses the List/Detail type of UI. I made some improvements to
+what was done in CommonControls:
+	1) Saves Details when orientation changes
+	2) Saves state of Details controls when orientation changes
+	3) Fragment back stack functional now
+	4) Readme.txt to explain how to clone SamplesTemplate
+	
+================================================================================
+New Visual Studio 2010 T4 Template Projects
+================================================================================
+1) Person Database back end templates (using SQL Server Management Objects)
+Originally we were using a simple one table database called Contact to store 
+data for our ContactClient apps. Then I did the same code for the DataTypes 
+database but where the Contact table had only 4 columns, DataTypes had around
+25 columns. It was a lot of copy/paste and was very error prone. The Person 
+project templates eliminate all the copy/paste. What took me about a day and
+a half will now take a few hours. 
+Templates will generate code for:
+	a) DataAccess layer using EF4 and a single table SQL Server 2008 DB
+	b) BusinessLogic layer
+	c) BusinessEntities layer
+	d) Restful WCF Web Service
+	e) Android ContentProvider with tester app
+
+2) Sample Templates
+These templates are used to add extra fragments to the SamplesTemplate 
+(List on left, Details on right) Android project. They also add Broadcast
+Receivers to the Main Activity for the extra fragments.

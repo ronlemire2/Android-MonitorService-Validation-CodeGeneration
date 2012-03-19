@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent" android:layout_height="match_parent"
+	android:orientation="vertical">
+
+	<FrameLayout android:layout_width="match_parent"
+		android:layout_height="8dp" android:background="#8b8989" />
+
+	<TextView android:id="@+id/etMessages" android:layout_width="match_parent"
+		android:layout_height="25dp">
+	</TextView>
+
+	<FrameLayout android:layout_width="match_parent"
+		android:layout_height="8dp" android:background="#8b8989" />
+	<LinearLayout android:layout_width="match_parent"
+		android:layout_height="match_parent" android:orientation="horizontal">
+
+		<FrameLayout android:id="@+id/list_replacer"
+			android:layout_width="match_parent" android:layout_height="match_parent"
+			android:layout_weight=".80" android:paddingLeft="20dp"
+			android:paddingTop="20dp" android:background="@android:color/white"
+			android:textColor="@android:color/black" />
+
+		<FrameLayout android:layout_width="8dp"
+			android:layout_height="match_parent" android:background="#8b8989" />
+
+		<FrameLayout android:id="@+id/detail_replacer"
+			android:layout_width="match_parent" android:layout_height="match_parent"
+			android:layout_weight=".20" android:paddingLeft="20dp"
+			android:paddingTop="20dp" android:background="@android:color/white"
+			android:textColor="@android:color/black" />
+	</LinearLayout>
+
+</LinearLayout>

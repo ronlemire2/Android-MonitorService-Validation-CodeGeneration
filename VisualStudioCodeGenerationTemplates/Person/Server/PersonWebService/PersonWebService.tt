@@ -1,0 +1,130 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #>
+<#@ output extension="cs" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string entityName = "Person";
+   string entityInstanceName = "person";
+   string wsName = "PersonWebService";
+   string wsInstanceName = "_personService";
+   string serviceName = "PersonService";
+   string beLibraryName = "PersonBusinessEntities";
+   string blLibraryName = "PersonBusinessLogic";
+   string viewAbbrev = "pview";
+#>
+<#
+	string firstColumnName = "";
+   foreach (Column column in table.Columns)
+   {
+	  firstColumnName = column.Name;
+      break;
+   }                                                                                 
+#>
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.ServiceModel;
+using System.ServiceModel.Web;
+using System.ServiceModel.Channels;
+using System.ServiceModel.Activation;
+using System.ServiceModel.Description;
+using <#= beLibraryName #>;
+using <#= blLibraryName #>;
+
+namespace <#= wsName #>
+{
+   [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+   [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
+   public class <#= wsName #> : I<#= wsName #>
+   {
+      <#= blLibraryName #>.I<#= serviceName #> <#= wsInstanceName #> = new <#= blLibraryName #>.<#= serviceName #>();
+      
+      public <#= entityName #>List Get<#= entityName #>List()
+      {
+         List<<#= entityName #>View> <#= viewAbbrev #>List =  <#= wsInstanceName #>.Get<#= entityName #>ViewList();
+         <#= entityName #>List <#= entityInstanceName #>List = new <#= entityName #>List();
+
+         foreach (<#= entityName #>View <#= viewAbbrev #> in <#= viewAbbrev #>List)
+         {
+            AddViewToList(<#= viewAbbrev #>, ref <#= entityInstanceName #>List);
+         }
+
+         return <#= entityInstanceName #>List;
+      }
+
+      public <#= entityName #>List Get<#= entityName #>(string <#= firstColumnName #>)
+      {
+         <#= entityName #>View <#= viewAbbrev #> = <#= wsInstanceName #>.Get<#= entityName #>View(int.Parse(<#= firstColumnName #>));
+         <#= entityName #>List <#= entityInstanceName #>List = new <#= entityName #>List();
+         AddViewToList(<#= viewAbbrev #>, ref <#= entityInstanceName #>List);
+         return <#= entityInstanceName #>List;
+      }
+
+      private void AddViewToList(<#= entityName #>View <#= viewAbbrev #>, ref <#= entityName #>List list)
+      {
+         // Map <#= entityName #>View to <#= entityName #> and add to <#= entityName #>List
+         list.Add(new <#= entityName #>()
+         {
+<#
+	PushIndent("\t\t\t\t");
+   int i = 1;
+   int fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	  if (i == 1) {
+	    WriteLine(string.Format("{0} = {1}.{2},", column.Name, viewAbbrev, column.Name));
+	  }
+     else {
+	     WriteLine(string.Format("{0} = {1}.{2}.Trim(){3}", column.Name, viewAbbrev, column.Name, i == fldCount ? "" : ","));
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+         });
+      }
+
+      public int Save<#= entityName #>(string <#= firstColumnName #>, <#= entityName #> addEdit<#= entityName #>)
+      {
+         int result = 0;
+
+         <#= beLibraryName #>.<#= entityName #>View <#= viewAbbrev #> = new <#= beLibraryName #>.<#= entityName #>View();
+<#
+	PushIndent("\t\t\t");
+   i = 1;
+   fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	  if (i == 1) {
+	     WriteLine(string.Format("{0}.{1} = addEdit{2}.{3};", viewAbbrev, column.Name, entityName, column.Name));
+	  }
+     else {
+	     WriteLine(string.Format("{0}.{1} = addEdit{2}.{3}.Trim();", viewAbbrev, column.Name, entityName, column.Name));
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+         result = <#= wsInstanceName #>.Save<#= entityName #>(<#= viewAbbrev #>);
+
+         return result;
+      }
+
+      public int Delete<#= entityName #>(string <#= firstColumnName #>)
+      {
+         int result = 0;
+         result = <#= wsInstanceName #>.Delete<#= entityName #>(int.Parse(<#= firstColumnName #>));
+         return result;
+      }
+   }
+}

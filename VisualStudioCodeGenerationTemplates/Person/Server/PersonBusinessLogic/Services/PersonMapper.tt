@@ -1,0 +1,198 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #>
+<#@ output extension="cs" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+   
+   string entityName = "Person";
+   string entityInstanceName = "person";
+   string tableName = "Person";
+   string wsName = "PersonWebService";
+   string wsInstanceName = "_personService";
+   string serviceName = "PersonService";
+   string beLibraryName = "PersonBusinessEntities";
+   string blLibraryName = "PersonBusinessLogic";
+   string entityAbbrev = "person";
+   string viewAbbrev = "personView";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <#= beLibraryName #>;
+
+namespace <#= blLibraryName #>
+{
+   public class <#= tableName #>Mapper
+   {
+      public static <#= entityName #>View MapEntityToView(<#= entityName #> <#= entityAbbrev #>)
+      {
+         <#= entityName #>View <#= viewAbbrev #> = new <#= entityName #>View();
+
+<#
+	PushIndent("\t\t\t");
+   int i = 1;
+   int fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	  if (i == 1) {
+	     WriteLine(string.Format("{0}.{1} = {2}.{3};", viewAbbrev, column.Name, entityAbbrev, column.Name));
+	  }
+     else {
+	     WriteLine(string.Format("{0}.{1} = {2}.{3}.{4}();", viewAbbrev, column.Name, entityAbbrev, column.Name, GenTrimOrToString(column)));
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+         return <#= viewAbbrev #>;
+      }
+
+      public static <#= entityName #> MapViewToEntity(<#= entityName #>View <#= viewAbbrev #>)
+      {
+         <#= entityName #> <#= entityAbbrev #> = new <#= entityName #>();
+
+<#
+	PushIndent("\t\t\t");
+   i = 1;
+   fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	  if (i == 1) {
+	     WriteLine(string.Format("{0}.{1} = {2}.{3};", entityAbbrev, column.Name, viewAbbrev, column.Name));
+	  }
+     else {
+	     WriteLine(string.Format("{0}.{1} = {2};", entityAbbrev, column.Name, GenConvertMethod(column, viewAbbrev, column.Name)));
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+         return <#= entityAbbrev #>;
+      }
+   }
+}
+
+
+<#+
+    private void HelloWorld()
+    {
+        this.Write("Hello World");
+    }
+#>
+
+<#+
+	private string GenTrimOrToString(Column col)
+	{
+		string colDataTypeName = col.DataType.Name;
+		string outString = string.Empty;
+		
+		switch (colDataTypeName)
+		{
+			case "bigint":
+		      outString = "ToString";
+				break;
+			case "bit":
+		      outString = "ToString";
+				break;
+         case "datetime":
+		      outString = "ToString";
+				break;
+			case "decimal":
+		      outString = "ToString";
+				break;
+			case "int":
+		      outString = "ToString";
+				break;
+			case "money":
+		      outString = "ToString";
+				break;
+			case "numeric":
+		      outString = "ToString";
+				break;
+			case "smalldatetime":
+		      outString = "ToString";
+				break;
+			case "smallint":
+		      outString = "ToString";
+				break;
+			case "smallmoney":
+		      outString = "ToString";
+				break;
+			case "tinyint":
+		      outString = "ToString";
+            break;
+         // all the string types
+         default:
+            outString = "Trim";
+            break;
+      }
+		
+		return outString;
+	}
+#>
+
+<#+
+	private string GenConvertMethod(Column col, string viewAbbrev, string fldName)
+	{
+		string colDataTypeName = col.DataType.Name;
+		string convertString = string.Empty;
+		
+		switch (colDataTypeName)
+		{
+			case "bigint":
+				convertString = string.Format("{0}({1}.{2})", "Convert.ToInt64", viewAbbrev, fldName);
+				break;
+			case "bit":
+            convertString = string.Format("{0}({1}.{2})", "Boolean.Parse", viewAbbrev, fldName);
+				break;
+         case "datetime":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToDateTime", viewAbbrev, fldName);
+				break;
+			case "decimal":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToDecimal", viewAbbrev, fldName);
+				break;
+			case "int":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToInt32", viewAbbrev, fldName);
+				break;
+			case "money":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToDecimal", viewAbbrev, fldName);
+				break;
+			case "numeric":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToDecimal", viewAbbrev, fldName);
+				break;
+			case "smalldatetime":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToDateTime", viewAbbrev, fldName);
+				break;
+			case "smallint":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToInt16", viewAbbrev, fldName);
+				break;
+			case "smallmoney":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToDecimal", viewAbbrev, fldName);
+				break;
+			case "tinyint":
+            convertString = string.Format("{0}({1}.{2})", "Convert.ToByte", viewAbbrev, fldName);
+				break;
+         // all the string types
+         default:
+            convertString = string.Format("{0}.{1}", viewAbbrev, fldName);
+            break;
+      }
+		
+		return convertString;
+	}
+#>
+
+
+
+
+

@@ -1,0 +1,5 @@
+﻿	string listName = "Sample";
+   string listNameCaps = "SAMPLE";
+   string listNameLower = "sample";
+   string packageName = "dev.ronlemire.samplestemplate";
+   string packagePart3 = "samplestemplate";

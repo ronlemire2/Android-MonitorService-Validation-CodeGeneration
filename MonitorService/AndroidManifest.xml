@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="dev.ronlemire.monitorservice"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk android:minSdkVersion="10" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- <uses-permission android:name="com.marakana.yamba.SEND_TIMELINE_NOTIFICATIONS" /> -->
+    <!-- <uses-permission android:name="com.marakana.yamba.RECEIVE_TIMELINE_NOTIFICATIONS" /> -->
+    <!-- <permission -->
+    <!-- android:description="@string/send_timeline_notifications_permission_description" -->
+    <!-- android:label="@string/send_timeline_notifications_permission_label" -->
+    <!-- android:name="com.marakana.yamba.SEND_TIMELINE_NOTIFICATIONS" -->
+    <!-- android:permissionGroup="android.permission-group.PERSONAL_INFO" -->
+    <!-- android:protectionLevel="normal" /> -->
+    <!-- <permission -->
+    <!-- android:description="@string/receive_timeline_notifications_permission_description" -->
+    <!-- android:label="@string/receive_timeline_notifications_permission_label" -->
+    <!-- android:name="com.marakana.yamba.RECEIVE_TIMELINE_NOTIFICATIONS" -->
+    <!-- android:permissionGroup="android.permission-group.PERSONAL_INFO" -->
+    <!-- android:protectionLevel="normal" /> -->
+
+    <application
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name" >
+        <activity
+            android:label="@string/app_name"
+            android:name=".MonitorServiceActivity" >
+            <intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service android:name="dev.ronlemire.monitorservice.MonitorService" />
+    </application>
+
+</manifest>

@@ -1,0 +1,56 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #>
+<#@ output extension="cs" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string entityName = "Person";
+   string wsName = "PersonWebService";
+#>
+<#
+	string firstColumnName = "";
+   foreach (Column column in table.Columns)
+   {
+	  firstColumnName = column.Name;
+      break;
+   }                                                                                 
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.ServiceModel.Web;
+using System.ServiceModel.Channels;
+using System.ServiceModel.Activation;
+
+namespace <#= wsName #>
+{
+   [ServiceContract]
+   public interface I<#= wsName #>
+   {
+      [OperationContract]
+      [WebGet(UriTemplate = "/<#= entityName #>List", ResponseFormat = WebMessageFormat.Json)]
+      <#= entityName #>List Get<#= entityName #>List();
+
+      [OperationContract]
+      [WebGet(UriTemplate = "/<#= entityName #>/{<#= firstColumnName #>}", ResponseFormat = WebMessageFormat.Json)]
+      <#= entityName #>List Get<#= entityName #>(string <#= firstColumnName #>);
+
+      [OperationContract]
+      [WebInvoke(UriTemplate = "/<#= entityName #>/{<#= firstColumnName #>}", Method = "PUT", RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json)]
+      int Save<#= entityName #>(string <#= firstColumnName #>, <#= entityName #> addEdit<#= entityName #>);
+
+      [OperationContract]
+      [WebInvoke(UriTemplate = "/<#= entityName #>/{<#= firstColumnName #>}", Method = "DELETE", ResponseFormat = WebMessageFormat.Json)]
+      int Delete<#= entityName #>(string <#= firstColumnName #>);
+   }
+}

@@ -1,0 +1,22 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".txt" #>
+<# 
+   var fragmentNames = new string[] { "Sample"
+   };
+   int loopCount = fragmentNames.Length;
+ #>
+ 
+    <string-array name="list_titles">
+<# 
+	for (int i = 0; i < loopCount; i++)	{
+	#>
+        <item><#= fragmentNames[i] #></item>
+<# } #>
+    </string-array>
+    <string-array name="list_fragments">
+<# 
+	for (int i = 0; i < loopCount; i++)	{
+	#>
+        <item><#= fragmentNames[i] #>Fragment</item>
+<# } #>
+    </string-array>

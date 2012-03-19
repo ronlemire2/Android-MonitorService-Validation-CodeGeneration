@@ -1,0 +1,142 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+
+
+
+===========================================================================================================================
+3/15/2012
+This template needs to be updated for List
+   string listName = "Sample";
+   string listNameCaps = "SAMPLE";
+   string listNameLower = "sample";
+===========================================================================================================================
+
+
+
+<# 
+   var fragmentNames = new string[] { "Sample"
+   };
+   
+   var intentFilterVariableNames = new string[] { "messageFromSampleFilter"
+   };
+
+   var intentNames = new string[] { "MESSAGE_FROM_SAMPLE_INTENT"
+   };
+
+   var qualifiedIntentNames = new string[] { "SampleFragment.MESSAGE_FROM_SAMPLE_INTENT"
+   };
+      
+   var receiverClassNames = new string[] { "MessageFromSampleReceiver"
+   };
+
+   var receiverVariableNames = new string[] { "messageFromSampleReceiver"
+   };
+
+   int loopCount = receiverClassNames.Length;
+ #>
+
+0=============================================================================================================================
+
+	private SampleListReceiver sampleListReceiver;
+	private IntentFilter sampleListFilter;
+ <# 
+	for (int i = 0; i < loopCount; i++)	{
+	#>
+ 	private <#= receiverClassNames[i] #> <#= receiverVariableNames[i] #>;
+<# } #>
+ <# 
+	for (int i = 0; i < loopCount; i++) {
+	#>
+	private IntentFilter <#= intentFilterVariableNames[i] #>;
+<# } #>
+
+1=============================================================================================================================
+
+		// Receiver to catch message sent from List after a sample has been picked
+		sampleListReceiver = new SampleListReceiver();
+		sampleListFilter = new IntentFilter(
+				SampleListFragment.SAMPLE_LIST_FRAGMENT_BROADCAST_INTENT);
+
+		// Messages from controls
+ <# 
+	for (int i = 0; i < loopCount; i++) {
+	#>
+		<#= receiverVariableNames[i] #> = new <#= receiverClassNames[i] #>();
+		<#= intentFilterVariableNames[i] #> = new IntentFilter(
+				<#= qualifiedIntentNames[i] #>);
+
+<# } #>
+	
+2=============================================================================================================================
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		registerReceiver(sampleListReceiver, sampleListFilter);
+ <# 
+	for (int i = 0; i < loopCount; i++) {
+	#>
+		registerReceiver(<#= receiverVariableNames[i] #>, <#= intentFilterVariableNames[i] #>);
+<# } #>
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+		unregisterReceiver(sampleListReceiver);
+ <# 
+	for (int i = 0; i < loopCount; i++) {
+	#>
+		unregisterReceiver(<#= receiverVariableNames[i] #>);
+<# } #>
+	}
+
+3=============================================================================================================================
+
+ <# 
+	for (int i = 0; i < loopCount; i++)
+	{
+	#>
+	class <#= receiverClassNames[i] #> extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			String message = (String) intent
+					.getSerializableExtra(<#= fragmentNames[i] #>Fragment.OUT_MESSAGE_KEY);
+			messagesEditText.setText(message);
+		}
+	}
+
+<# } #>
+
+4=============================================================================================================================
+
+<# 
+   //=============================================================================================================================
+   //Non-loop setup
+   //=============================================================================================================================
+	string replacer = "R.id.sample_replacer";
+   string topView = "MainActivity.sampleListView";
+   string fragmentClassName = "SampleFragment";
+   string fragmentVariableName = "sampleFragment";
+   string className = "Sample";
+   string instanceParameter = "Sample";
+ #>
+
+public void Start<#= className #>Fragment() {
+	if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE
+			&& isTablet()) {
+		Fragment <#= fragmentVariableName #> = (Fragment) fm
+				.findFragmentById(<#= replacer #>);
+		<#= fragmentVariableName #> = <#= fragmentClassName #>.newInstance("<#= instanceParameter #>");
+
+		fm.beginTransaction()
+			.replace(<#= replacer #>, <#= fragmentVariableName #>)
+			.commit();
+	} else {
+		<#= fragmentClassName #> <#= fragmentVariableName #> = <#= fragmentClassName #>
+				.newInstance("<#= instanceParameter #>");
+		getSupportFragmentManager().beginTransaction()
+				.replace(<#= topView #>.getId(), <#= fragmentVariableName #>)
+				.commit();
+	}
+}	

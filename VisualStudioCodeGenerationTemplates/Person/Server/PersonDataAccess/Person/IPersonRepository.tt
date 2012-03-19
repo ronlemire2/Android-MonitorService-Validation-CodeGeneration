@@ -1,0 +1,25 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#
+   string entityName = "Person";
+   string tableName = "Person";
+   string beLibraryName = "PersonBusinessEntities";
+	string daLibraryName = "PersonDataAccess";
+   string primaryKeyName = "Id";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <#= beLibraryName #>;
+
+namespace <#= daLibraryName #>
+{
+   public interface I<#= tableName #>Repository
+   {
+      IEnumerable<<#= entityName #>> Get<#= entityName #>List { get; }
+      <#= entityName #> Get<#= entityName #>(int <#= primaryKeyName #>);
+      int Set<#= entityName #>(<#= entityName #> entity);
+      int Delete<#= entityName #>(int <#= primaryKeyName #>);
+   }
+}

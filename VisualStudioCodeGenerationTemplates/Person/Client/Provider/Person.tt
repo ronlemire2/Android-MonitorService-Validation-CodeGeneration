@@ -1,0 +1,69 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string packageName = "dev.ronlemire.personprovider";
+   string entityName = "Person";
+#>
+package <#= packageName #>;
+
+import java.io.Serializable;
+
+public class <#= entityName #> implements Serializable {
+	private static final long serialVersionUID = 1L;
+<#
+	PushIndent("\t");
+   int i = 0;
+   foreach (Column column in table.Columns)
+   {
+     WriteLine(string.Format("private String {0};", column.Name));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+	public <#= entityName #> (
+<#
+	PushIndent("\t\t\t");
+   i = 0;
+   int fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("String {0}{1}", column.Name, i == fldCount-1 ? "" : ","));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+			) {
+<#
+	PushIndent("\t\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("this.{0} = {1};", column.Name, column.Name));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+	}
+
+<#
+	PushIndent("\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("public String get{0}() {1} return this.{2}; {3}", column.Name, "{", column.Name, "}"));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+}

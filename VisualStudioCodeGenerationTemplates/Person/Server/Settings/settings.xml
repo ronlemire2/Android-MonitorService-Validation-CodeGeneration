@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<settings>
+
+    <setting>
+       <application>ContactHttpClient</application>
+       <name>MULTIPLE_CONTACT_URL</name>
+       <value>http://192.168.1.64:8085/service.svc/ContactList</value>
+    </setting>
+
+    <setting>
+       <application>ContactHttpClient</application>
+       <name>SINGLE_CONTACT_URL</name>
+       <value>http://192.168.1.64:8085/service.svc/Contact/</value>
+    </setting>
+
+    <setting>
+       <application>DataTypesHttpClient</application>
+       <name>MULTIPLE_DATATYPES_URL</name>
+       <value>http://192.168.1.64:8087/service.svc/DataTypeList</value>
+    </setting>
+
+    <setting>
+       <application>DataTypesHttpClient</application>
+       <name>SINGLE_DATATYPES_URL</name>
+       <value>http://192.168.1.64:8087/service.svc/DataType/</value>
+    </setting>
+
+    <setting>
+       <application>PersonHttpClient</application>
+       <name>MULTIPLE_PERSON_URL</name>
+       <value>http://192.168.1.64:8089/service.svc/PersonList</value>
+    </setting>
+
+    <setting>
+       <application>PersonHttpClient</application>
+       <name>SINGLE_PERSON_URL</name>
+       <value>http://192.168.1.64:8089/service.svc/Person/</value>
+    </setting>
+</settings>

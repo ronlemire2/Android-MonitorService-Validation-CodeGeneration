@@ -1,0 +1,7 @@
+﻿ 
+    <string-array name="list_titles">
+        <item>Sample</item>
+    </string-array>
+    <string-array name="list_fragments">
+        <item>SampleFragment</item>
+    </string-array>

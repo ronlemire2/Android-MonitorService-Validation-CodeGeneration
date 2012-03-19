@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<string-array name="list_titles">
+		<item>Hints</item>
+		<item>InputType</item>
+		<item>Regex</item>
+	</string-array>
+	<string-array name="list_fragments">
+		<item>HintsFragment</item>
+		<item>InputTypeFragment</item>
+		<item>RegexFragment</item>
+	</string-array>
+</resources>
+    

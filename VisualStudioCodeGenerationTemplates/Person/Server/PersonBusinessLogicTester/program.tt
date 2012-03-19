@@ -1,0 +1,310 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#@ Import Namespace="System.Text" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string entityName = "Person";
+   string tableName = "Person";
+   string beLibraryName = "PersonBusinessEntities";
+   string blLibraryName = "PersonBusinessLogic";
+   string blServiceName = "PersonService";
+   string blServiceInstanceName = "personService";
+   string viewAbbrev = "personView";
+#>
+<#
+	string firstColumnName = "";
+   foreach (Column column in table.Columns)
+   {
+	  firstColumnName = column.Name;
+      break;
+   }                                                                                 
+#>
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <#= beLibraryName #>;
+using <#= blLibraryName #>;
+
+namespace <#= tableName #>Tester
+{
+   class Program
+   {
+      private static <#= blLibraryName #>.<#= blServiceName #> <#= blServiceInstanceName #>;
+      private static int new<#= entityName #><#= firstColumnName #>;
+
+      static void Main(string[] args)
+      {
+         <#= blServiceInstanceName #> = new <#= blServiceName #>();
+         Add<#= entityName #>Row();
+         Get<#= entityName #>ViewList();
+         Get<#= entityName #>View(new<#= entityName #><#= firstColumnName #>);
+         //Update<#= entityName #>Row(new<#= entityName #><#= firstColumnName #>);
+         //Delete<#= entityName #>View(new<#= entityName #><#= firstColumnName #>);
+      }
+
+      private static void Add<#= entityName #>Row()
+      {
+         <#= entityName #>View <#= viewAbbrev #> = new <#= entityName #>View();
+         <#= viewAbbrev #>.<#= firstColumnName #> = 0;
+<#
+	PushIndent("\t\t\t");
+   int i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 1) {
+      WriteLine(string.Format("{0}.{1} = \"{2}\";", viewAbbrev, column.Name, GenAddRowValues(column)));
+     }
+     i++;
+   }
+   PopIndent();
+#>
+         new<#= entityName #><#= firstColumnName #> = <#= blServiceInstanceName #>.Save<#= entityName #>(<#= viewAbbrev #>);
+         Console.WriteLine(string.Format("*** Add<#= entityName #>Row ***"));
+         Console.WriteLine(string.Format("New <#= firstColumnName #>: {0}", new<#= entityName #><#= firstColumnName #>.ToString()));
+         Console.WriteLine(Environment.NewLine);
+      }
+
+      private static void Get<#= entityName #>ViewList()
+      {
+         List<<#= entityName #>View> <#= viewAbbrev #>List = null;
+         <#= viewAbbrev #>List = <#= blServiceInstanceName #>.Get<#= entityName #>ViewList();
+         Console.WriteLine(string.Format("*** Get<#= entityName #>ViewList ***"));
+         Console.WriteLine(string.Format("<#= entityName #>ViewList count: {0}", <#= viewAbbrev #>List.Count()));
+         Console.WriteLine(Environment.NewLine);
+      }
+
+      private static void Get<#= entityName #>View(int <#= firstColumnName #>)
+      {
+         <#= entityName #>View <#= viewAbbrev #> = null;
+         <#= viewAbbrev #> = <#= blServiceInstanceName #>.Get<#= entityName #>View(<#= firstColumnName #>);
+         Console.WriteLine(string.Format("*** Get<#= entityName #>View ***"));
+<#
+	PushIndent("\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 0) {
+#>
+      Console.WriteLine(string.Format("<#= entityName #>View <#= column.Name #>: {0}", <#= viewAbbrev #>.<#= column.Name #>.ToString()));
+<#
+     }
+     i++;
+   }
+   PopIndent();
+#>        
+         Console.WriteLine(Environment.NewLine);
+      }
+
+      private static void Update<#= entityName #>Row(int <#= firstColumnName #>)
+      {
+         // Get <#= entityName #>View
+         <#= entityName #>View <#= viewAbbrev #> = null;
+         <#= viewAbbrev #> = <#= blServiceInstanceName #>.Get<#= entityName #>View(<#= firstColumnName #>);
+         Console.WriteLine(string.Format("*** Update<#= entityName #>Row ***"));
+<#
+	PushIndent("\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 0) {
+#>
+      Console.WriteLine(string.Format("Original <#= entityName #>View <#= column.Name #>: {0}", <#= viewAbbrev #>.<#= column.Name #>.ToString()));
+<#
+     }
+     i++;
+   }
+   PopIndent();
+#>   
+         // Change <#= entityName #>View
+<#
+	PushIndent("\t\t\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 1) {
+	     WriteLine(string.Format("{0}.{1} = \"{2}\";", viewAbbrev, column.Name, GenUpdateRowValues(column)));
+     }
+     i++;
+   }
+   PopIndent();
+#>
+         // Save <#= entityName #>
+         <#= blServiceInstanceName #>.Save<#= entityName #>(<#= viewAbbrev #>);
+
+         // Get updated <#= entityName #>View
+         <#= viewAbbrev #> = <#= blServiceInstanceName #>.Get<#= entityName #>View(<#= firstColumnName #>);
+<#
+	PushIndent("\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 0) {
+#>
+      Console.WriteLine(string.Format("Updated <#= entityName #>View <#= column.Name #>: {0}", <#= viewAbbrev #>.<#= column.Name #>.ToString()));
+<#
+     }
+     i++;
+   }
+   PopIndent();
+#>  
+         Console.WriteLine(Environment.NewLine);
+      }
+
+      private static void Delete<#= entityName #>View(int <#= firstColumnName #>)
+      {
+         // Get count before delete
+         List<<#= entityName #>View> <#= viewAbbrev #>List = null;
+         <#= viewAbbrev #>List = <#= blServiceInstanceName #>.Get<#= entityName #>ViewList();
+
+         Console.WriteLine(string.Format("*** Delete<#= entityName #>View ***"));
+         Console.WriteLine(string.Format("Before delete count: {0}", <#= viewAbbrev #>List.Count())); 
+         // Delete <#= entityName #> 
+         int rowsDeleted = <#= blServiceInstanceName #>.Delete<#= entityName #>(<#= firstColumnName #>);
+
+         // Get count after delete
+         <#= viewAbbrev #>List = null;
+         <#= viewAbbrev #>List = <#= blServiceInstanceName #>.Get<#= entityName #>ViewList();
+         Console.WriteLine(string.Format("After delete count: {0}", <#= viewAbbrev #>List.Count()));
+         Console.WriteLine(Environment.NewLine);
+         Console.WriteLine("Press any key to continue...");
+         Console.Read();
+      }
+   }
+}
+
+
+<#+
+    public void HelloWorld()
+    {
+        this.Write("Hello World");
+    }
+
+    public static Random random = new Random((int)DateTime.Now.Ticks);
+    public string RandomString(int size)
+   {
+      StringBuilder builder = new StringBuilder();
+      char ch;
+      for (int i = 0; i < size; i++)
+      {
+         ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
+         builder.Append(ch);
+      }
+
+   return builder.ToString();
+   }
+
+    public int RandomNumber(int min, int max)
+   {
+      Random random = new Random();
+      return random.Next(min, max); 
+   }
+
+    public string GenAddRowValues(Column col)
+	{
+		string colDataTypeName = col.DataType.Name;
+		string addRowValue = string.Empty;
+		
+		switch (colDataTypeName)
+		{
+			case "bigint":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+         case "bit":
+            addRowValue = "true";
+            break;
+         case "datetime":
+		      addRowValue = "1/1/2012";
+				break;
+			case "decimal":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "int":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "money":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "numeric":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smalldatetime":
+            addRowValue = "1/2/2012";
+				break;
+			case "smallint":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smallmoney":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "tinyint":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+         // all the string types
+         default:
+            addRowValue = RandomString(5);
+            break;
+      }
+
+      return addRowValue;
+	}
+
+    public string GenUpdateRowValues(Column col)
+	{
+		string colDataTypeName = col.DataType.Name;
+		string updateRowValue = string.Empty;
+		
+		switch (colDataTypeName)
+		{
+			case "bigint":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+         case "bit":
+            updateRowValue = "false";
+            break;
+         case "datetime":
+		      updateRowValue = "12/25/2012";
+				break;
+			case "decimal":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "int":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "money":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "numeric":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smalldatetime":
+            updateRowValue = "12/31/2012";
+				break;
+			case "smallint":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smallmoney":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "tinyint":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+         // all the string types
+         default:
+            updateRowValue = RandomString(5);
+            break;
+		}
+
+      return updateRowValue;
+	}    
+#>

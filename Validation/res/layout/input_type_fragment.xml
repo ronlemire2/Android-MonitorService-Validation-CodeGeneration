@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:orientation="vertical" >
+	
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="text" android:inputType="text"></EditText>  
+	        
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textCapCharacters" android:inputType="text|textCapCharacters"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textCapWords" android:inputType="text|textCapWords"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textCapSentences" android:inputType="text|textCapSentences"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textAutoCorrect" android:inputType="text|textAutoCorrect"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textAutoComplete" android:inputType="text|textAutoComplete"></EditText>    
+	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textMultiLine" android:inputType="text|textMultiLine"></EditText>    
+
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textImeMultiLine" android:inputType="text|textImeMultiLine"></EditText>  
+	        
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textUri" android:inputType="text|textUri"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textEmailAddress" android:inputType="text|textEmailAddress"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textEmailSubject" android:inputType="text|textEmailSubject"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textShortMessage" android:inputType="text|textShortMessage"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textLongMessage" android:inputType="text|textLongMessage"></EditText>    
+	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textPersonName" android:inputType="text|textPersonName"></EditText>    
+	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textPostalAddress" android:inputType="text|textPostalAddress"></EditText>    
+	        	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textPersonName" android:inputType="text|textPersonName"></EditText>    
+	        	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textPassword" android:inputType="text|textPassword"></EditText>    
+	        	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textVisiblePassword" android:inputType="text|textVisiblePassword"></EditText>    
+	        	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textWebEditText" android:inputType="text|textWebEditText"></EditText>    
+	        	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="textPhonetic" android:inputType="text|textPhonetic"></EditText>    
+	        	        	        	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="number" android:inputType="number"></EditText>
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="numberSigned" android:inputType="number|numberSigned"></EditText>
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="numberDecimal" android:inputType="number|numberSigned|numberDecimal"></EditText>
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="phone" android:inputType="phone"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="datetime" android:inputType="datetime"></EditText>    
+	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="date" android:inputType="date"></EditText>    
+	        	    
+	    <EditText android:layout_width="match_parent" android:layout_height="wrap_content" 
+	        android:hint="time" android:inputType="time"></EditText>    
+	        	        
+	</LinearLayout>
+</ScrollView>

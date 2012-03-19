@@ -1,0 +1,15 @@
+﻿1) Create corresponding <ProviderGenerated>.java files in Eclipse
+2) Cut and paste java code from <ProviderGenerated>.java into Eclipse java files
+3) Add WebService URLs to inetpub->wwwroot->AndroidInstall->settings.xml
+4) Delete ConfigProvider DB on device
+5) Run ConfigProvider->InitFromXml file
+6) strings.xml
+	 add "config_provider" string
+	 add "person_provider" string
+7) add menu folder
+	 add main_menu.xml
+8) layouts folder
+	 change main.xml
+9) manifest.xml
+	 <...permission INTERNET...>
+	 <provider :authorities...	:name...>

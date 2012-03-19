@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, MonitorServiceActivity!</string>
+    <string name="app_name">MonitorService</string>
+    <string name="msgNotificationTitle">New ConfigDB Changes</string>
+    <string name="msgNotificationMessage">New ConfigDB count: %d</string>
+    <string name="content_provider">content://dev.ronlemire.provider.config/settings</string>
+</resources>

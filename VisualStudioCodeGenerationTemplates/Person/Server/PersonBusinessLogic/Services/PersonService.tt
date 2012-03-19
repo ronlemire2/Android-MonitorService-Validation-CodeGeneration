@@ -1,0 +1,146 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#
+   string entityName = "Person";
+   string entityInstanceName = "person";
+   string tableName = "Person";
+   string beLibraryName = "PersonBusinessEntities";
+   string blLibraryName = "PersonBusinessLogic";
+   string daLibraryName = "PersonDataAccess";
+   string primaryKeyName = "Id";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <#= beLibraryName  #>;
+using <#= daLibraryName  #>;
+
+namespace <#= blLibraryName  #>
+{
+   public class <#= tableName  #>Service : ServiceBase, I<#= tableName  #>Service
+   {
+
+      #region Constructors
+
+      private I<#= tableName  #>Repository _repository;
+
+
+      public <#= tableName  #>Service()
+         : this(new <#= tableName  #>Repository())
+      {
+      }
+
+      public <#= tableName  #>Service(I<#= tableName  #>Repository repository)
+      {
+         this._repository = repository;
+      }
+
+      #endregion
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <returns></returns>
+      public List<<#= entityName  #>View> Get<#= entityName  #>ViewList()
+      {
+         List<<#= entityName  #>View> <#= entityInstanceName  #>ViewList = new List<<#= entityName  #>View>();
+
+         IEnumerable<<#= entityName  #>> entityList = _repository.Get<#= entityName  #>List.OrderBy(d => d.<#= primaryKeyName  #>);
+         foreach (<#= entityName  #> entity in entityList)
+         {
+            <#= entityInstanceName  #>ViewList.Add(<#= tableName  #>Mapper.MapEntityToView(entity));
+         }
+
+         return <#= entityInstanceName  #>ViewList;
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="<#= primaryKeyName  #>"></param>
+      /// <returns></returns>
+      public <#= entityName  #>View Get<#= entityName  #>View(int <#= primaryKeyName  #>)
+      {
+         <#= entityName  #>View <#= entityInstanceName  #>View = new <#= entityName  #>View();
+
+         <#= entityName  #> <#= entityInstanceName  #> = _repository.Get<#= entityName  #>(<#= primaryKeyName  #>);
+         <#= entityInstanceName  #>View = <#= tableName  #>Mapper.MapEntityToView(<#= entityInstanceName  #>);
+
+         return <#= entityInstanceName  #>View;
+      }
+
+      public static <#= entityName  #> GetModel()
+      {
+         var entity = new <#= entityName  #>();
+         return entity;
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="dtv"></param>
+      /// <returns></returns>
+      public int Save<#= entityName  #>(<#= entityName  #>View dtv)
+      {
+         int result = 0;
+
+         // Validation
+         this.Errors.Clear();
+
+         try
+         {
+            // Data access
+            if (!this.HasErrors)
+            {
+               // Save
+               <#= entityName  #> entity =  <#= tableName  #>Mapper.MapViewToEntity(dtv);
+               result = this._repository.Set<#= entityName  #>(entity);
+            }
+         }
+         catch (System.Data.UpdateException ex)
+         {
+            if (ex.InnerException != null && ex.InnerException is System.Data.SqlClient.SqlException
+               && ((System.Data.SqlClient.SqlException)ex.InnerException).ErrorCode == 8152)
+               Errors.Add(ResourceStrings.ErrorMaxLength);
+            else
+               Errors.Add(ex.Message);
+         }
+
+         return result;
+      }
+
+      /// <summary>
+      /// 
+      /// </summary>
+      /// <param name="<#= primaryKeyName  #>"></param>
+      /// <returns></returns>
+      public int Delete<#= entityName  #>(int <#= primaryKeyName  #>)
+      {
+         int result = 0;
+
+         // Validation
+         this.Errors.Clear();
+
+         try
+         {
+            // Data access
+            if (!this.HasErrors)
+            {
+               // Save
+               result = this._repository.Delete<#= entityName  #>(<#= primaryKeyName  #>);
+            }
+         }
+         catch (System.Data.UpdateException ex)
+         {
+            if (ex.InnerException != null && ex.InnerException is System.Data.SqlClient.SqlException
+               && ((System.Data.SqlClient.SqlException)ex.InnerException).ErrorCode == 8152)
+               Errors.Add(ResourceStrings.ErrorMaxLength);
+            else
+                Errors.Add(ex.Message);
+         }
+
+         return result;
+      }
+   }
+}

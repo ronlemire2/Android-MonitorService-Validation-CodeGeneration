@@ -1,0 +1,343 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string packageName = "dev.ronlemire.personprovider";
+   string entityName = "Person";
+   string entityNameUpper = "PERSON";
+   string entityInstanceName = "person";
+   string tableName = "Person";
+   string tableNameLower = "person";
+   string tableNameUpper = "PERSON";
+   string tableInstanceName = "person";
+#>
+<#
+	string firstColumnName = "";
+   foreach (Column column in table.Columns)
+   {
+	  firstColumnName = column.Name;
+      break;
+   }                                                                                 
+#>
+package <#= packageName #>;
+
+import <#= packageName #>.<#= tableName #>ProviderMetaData.<#= tableName #>TableMetaData;
+import android.content.ContentProvider;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.database.MatrixCursor;
+import android.database.SQLException;
+import android.net.Uri;
+import android.util.Log;
+
+public class <#= tableName #>Provider extends ContentProvider {
+	private static final String TAG = "<#= tableName #>Provider";
+
+	// Provide a mechanism to identify
+	// all the incoming uri patterns.
+	private static final UriMatcher sUriMatcher;
+	private static final int <#= tableNameUpper #>_All = 1;
+	private static final int <#= tableNameUpper #>_ONE = 2;
+	static {
+		sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+		sUriMatcher.addURI(<#= tableName #>ProviderMetaData.AUTHORITY, "<#= tableNameLower #>",
+				<#= tableNameUpper #>_All);
+		sUriMatcher.addURI(<#= tableName #>ProviderMetaData.AUTHORITY, "<#= tableNameLower #>/#",
+				<#= tableNameUpper #>_ONE);
+
+	}
+
+	@Override
+	public boolean onCreate() {
+		Log.d(TAG, "main onCreate called");
+		return true;
+	}
+
+	@Override
+	public String getType(Uri uri) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Cursor query(Uri uri, String[] projection, String selection,
+			String[] selectionArgs, String sortOrder) {
+		<#= entityName #>[] <#= tableInstanceName #>Array = null;
+
+		<#= tableName #>HttpClient <#= tableInstanceName #>HttpClient = new <#= tableName #>HttpClient(
+				getContext());
+
+		switch (sUriMatcher.match(uri)) {
+		case <#= tableNameUpper #>_All: {
+			<#= tableInstanceName #>Array = <#= tableInstanceName #>HttpClient.Get<#= entityName #>Array("0");
+			break;
+		}
+		case <#= tableNameUpper #>_ONE: {
+			<#= tableInstanceName #>Array = <#= tableInstanceName #>HttpClient.Get<#= entityName #>Array(uri
+					.getPathSegments().get(1));
+			break;
+		}
+		default:
+			break;
+
+		}
+
+		// Column Names
+<#
+	PushIndent("\t\t");
+   int i = 0;
+   int fldCount = table.Columns.Count;
+		WriteLine(string.Format("String[] colNames = new String[{0}];", fldCount.ToString()));
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("colNames[{0}] = \"{1}\";", i.ToString(), column.Name));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+		// Column Values
+<#
+	PushIndent("\t\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("String {0};", column.Name));
+     i++;
+   }      
+   PopIndent();
+#>
+
+		MatrixCursor cursor = new MatrixCursor(colNames);
+		for (<#= entityName #> <#= entityInstanceName #> : <#= tableInstanceName #>Array) {
+<#
+	PushIndent("\t\t\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("{0} = {1}.get{2}();", column.Name, entityInstanceName, column.Name));
+     i++;
+   }      
+   PopIndent();
+#>
+			cursor.addRow(new Object[] { 
+<#
+	PushIndent("\t\t\t\t");
+   i = 0;
+   fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("{0}{1}", column.Name, i == fldCount-1 ? "" : ","));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+         });
+		}
+
+		return cursor;
+	}
+
+	@Override
+	public Uri insert(Uri uri, ContentValues initialValues) {
+		// Validate the requested uri
+		if (sUriMatcher.match(uri) != <#= tableNameUpper #>_ONE) {
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+
+		ContentValues values;
+		if (initialValues != null) {
+			values = new ContentValues(initialValues);
+		} else {
+			values = new ContentValues();
+		}
+
+		// Make sure that the fields are all set
+<#
+	PushIndent("\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+#>   
+		if (values.containsKey(<#= entityName #>TableMetaData.<#= entityNameUpper #>_<#= column.Name.ToUpper() #>) == false) {
+			throw new SQLException(
+					"Failed to insert row because Id is needed " + uri);
+		}
+<#
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+<#
+	PushIndent("\t\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("String {0} = values.getAsString({1}TableMetaData.{2}_{3});", column.Name, tableName, tableNameUpper, column.Name.ToUpper() ));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+		<#= entityName #> add<#= entityName #> = new <#= entityName #>(
+<#
+	PushIndent("\t\t\t");
+   i = 0;
+   fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("{0}{1}", column.Name, i == fldCount-1 ? "" : ","));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+         );
+		<#= tableName #>HttpClient <#= tableInstanceName #>HttpClient = new <#= tableName #>HttpClient(
+				getContext());
+		Integer new<#= entityName #>Id = <#= tableInstanceName #>HttpClient.Save<#= entityName #>(add<#= entityName #>);
+
+		if (new<#= entityName #>Id > 0) {
+			Uri inserted<#= entityName #>Uri = ContentUris.withAppendedId(
+					<#= tableName #>TableMetaData.CONTENT_URI, new<#= entityName #>Id);
+			getContext().getContentResolver().notifyChange(inserted<#= entityName #>Uri,
+					null);
+
+			return inserted<#= entityName #>Uri;
+		}
+
+		throw new SQLException("Failed to insert row into " + uri);
+	}
+
+	@Override
+	public int update(Uri uri, ContentValues updateValues, String selection,
+			String[] selectionArgs) {
+
+		switch (sUriMatcher.match(uri)) {
+		case <#= tableNameUpper #>_All:
+			// count = db.update(BookTableMetaData.TABLE_NAME, values, where,
+			// whereArgs);
+			break;
+
+		case <#= tableNameUpper #>_ONE:
+			ContentValues values;
+			if (updateValues != null) {
+				values = new ContentValues(updateValues);
+			} else {
+				values = new ContentValues();
+			}
+
+			// Make sure that the fields are all set
+<#
+	PushIndent("\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+#>   
+		if (values.containsKey(<#= entityName #>TableMetaData.<#= entityNameUpper #>_<#= column.Name.ToUpper() #>) == false) {
+			throw new SQLException(
+					"Failed to insert row because Id is needed " + uri);
+		}
+<#
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+<#
+	PushIndent("\t\t\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("String {0} = values.getAsString({1}TableMetaData.{2}_{3});", column.Name, tableName, tableNameUpper, column.Name.ToUpper() ));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+
+			<#= entityName #> update<#= entityName #> = new <#= entityName #>(
+<#
+	PushIndent("\t\t\t\t");
+   i = 0;
+   fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("{0}{1}", column.Name, i == fldCount-1 ? "" : ","));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+         );
+			<#= tableName #>HttpClient <#= tableInstanceName #>HttpClient = new <#= tableName #>HttpClient(
+					getContext());
+			int numRowsUpdated = <#= tableInstanceName #>HttpClient.Save<#= entityName #>(update<#= entityName #>);
+
+			if (numRowsUpdated > 0) {
+				Uri updated<#= entityName #>Uri = ContentUris.withAppendedId(
+						<#= tableName #>TableMetaData.CONTENT_URI, Long.parseLong(<#= firstColumnName #>));
+				getContext().getContentResolver().notifyChange(updated<#= entityName #>Uri,
+						null);
+
+				return numRowsUpdated;
+			}
+
+			throw new SQLException("Failed to insert row into " + uri);
+		default:
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+
+		getContext().getContentResolver().notifyChange(uri, null);
+
+		return 0;
+	}
+
+	@Override
+	public int delete(Uri uri, String where, String[] whereArgs) {
+		int count = 0;
+		switch (sUriMatcher.match(uri)) {
+		case <#= tableNameUpper #>_All:
+			// count = db.delete(BookTableMetaData.TABLE_NAME, where,
+			// whereArgs);
+			break;
+
+		case <#= tableNameUpper #>_ONE:
+			String <#= firstColumnName #> = uri.getPathSegments().get(1);
+<#
+fldCount = table.Columns.Count;
+string quotesString = "";
+for (int z = 1; z < fldCount; z++ )
+{
+	if (z == fldCount-1) // last column no comma
+   {
+	  quotesString += "\"\"";
+   }
+   else
+   {
+	  quotesString += "\"\",";
+   }
+}                                                                                 
+#>
+			<#= entityName #> delete<#= entityName #> = new <#= entityName #>(<#= firstColumnName #>, <#= quotesString #>);
+			<#= tableName #>HttpClient <#= tableInstanceName #>HttpClient = new <#= tableName #>HttpClient(
+					getContext());
+			count = <#= tableInstanceName #>HttpClient.Delete<#= entityName #>(delete<#= entityName #>);
+			break;
+
+		default:
+			throw new IllegalArgumentException("Unknown URI " + uri);
+		}
+
+		getContext().getContentResolver().notifyChange(uri, null);
+		return count;
+	}
+}

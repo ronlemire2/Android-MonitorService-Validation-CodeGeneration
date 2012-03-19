@@ -1,0 +1,16 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#
+   string packageName = "dev.ronlemire.personprovider";
+#>
+package <#=  packageName #>;
+
+import android.content.Context;
+
+public class TesterBase {
+	protected Context mContext;
+
+	public TesterBase(Context ctx) {
+		mContext = ctx;
+	}
+}

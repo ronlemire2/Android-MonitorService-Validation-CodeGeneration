@@ -1,0 +1,53 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #>
+<#@ output extension="cs" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+   string entityName = "Person";
+   string wsName = "PersonWebService";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using System.ServiceModel.Web;
+using System.ServiceModel.Channels;
+using System.ServiceModel.Activation;
+
+namespace  <#= wsName #>
+{
+   [DataContract(Namespace = "")]
+   public class <#= entityName #>
+   {
+<#
+	PushIndent("\t\t");
+   int i = 1;
+   foreach (Column column in table.Columns)
+   {
+     WriteLine("[DataMember(Order=" + i.ToString() + ")]");
+	  if (i == 1) {
+         WriteLine("public  int " + column.Name + ";");
+	  }
+     else {
+         WriteLine("public  string " + column.Name + ";");
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+   }
+
+   [CollectionDataContract(Name = "<#= entityName #>List", Namespace = "")]
+   public class <#= entityName #>List : List<<#= entityName #>>
+   {
+   }
+}

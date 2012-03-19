@@ -1,0 +1,88 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".cs" #>
+<#
+   string entityName = "Person";
+   string entityInstanceName = "person";
+   string tableName = "Person";
+   string objectSetName = "People";
+   string beLibraryName = "PersonBusinessEntities";
+	string daLibraryName = "PersonDataAccess";
+   string primaryKeyName = "Id";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using <#= beLibraryName #>;
+
+namespace <#= daLibraryName #>
+{
+   public class <#= tableName #>Repository : RepositoryBase, I<#= tableName #>Repository
+   {
+      public IEnumerable<<#= entityName #>> Get<#= entityName #>List
+      {
+         get
+         {
+            var entityList = default(IEnumerable<<#= entityName #>>);
+
+            // Calling data access (entity framework)
+            entityList = _dbContext.<#= objectSetName #>;
+
+            return entityList;
+         }
+      }
+
+      public <#= entityName #> Get<#= entityName #>(int <#= primaryKeyName #>)
+      {
+         var result = default(<#= entityName #>);
+
+         // Calling data access (entity framework)
+         result = _dbContext.<#= objectSetName #>
+            .Where(d => d.<#= primaryKeyName #> == <#= primaryKeyName #>).FirstOrDefault();
+
+         return result;
+      }
+
+      public int Set<#= entityName #>(<#= entityName #> entity)
+      {
+         var result = 0;
+
+         // Load object into context (entity framework) 
+         var loadedEntity = _dbContext.<#= objectSetName #>.Where(d => d.<#= primaryKeyName #> == entity.<#= primaryKeyName #>).FirstOrDefault();
+
+         // Modify the context
+         if (loadedEntity == null)
+         { //not found?
+            // Add
+            this._dbContext.<#= objectSetName #>.AddObject(entity);
+         }
+         else
+         {
+            // Update
+            this._dbContext.<#= objectSetName #>.ApplyCurrentValues(entity);
+         }
+
+         // Save in data access (entity framework)
+         result = this._dbContext.SaveChanges();
+
+         // 2/25/2012 return entity.Id if add
+         //return result;
+         return loadedEntity == null ? entity.<#= primaryKeyName #> : result;
+      }
+
+      public int Delete<#= entityName #>(int <#= primaryKeyName #>)
+      {
+         int result = 0;
+
+         // Calling data access (entity framework)
+         var <#= entityInstanceName #> = Get<#= entityName #>(<#= primaryKeyName #>);
+         _dbContext.DeleteObject(<#= entityInstanceName #>);
+         // Save in data access (entity framework)
+         result = this._dbContext.SaveChanges();
+
+         return result;
+      }
+
+   }
+
+}

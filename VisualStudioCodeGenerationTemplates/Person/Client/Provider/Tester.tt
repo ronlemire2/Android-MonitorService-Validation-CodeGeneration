@@ -1,0 +1,646 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#@ Import Namespace="System.Text" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string packageName = "dev.ronlemire.personprovider";
+   string entityName = "Person";
+   string tableName = "Person";
+   string tableNameLower = "person";
+   string tableNameUpper = "PERSON";
+#>
+<#
+	string firstColumnName = "";
+   foreach (Column column in table.Columns)
+   {
+	  firstColumnName = column.Name;
+      break;
+   }                                                                                 
+#>
+package <#=  packageName #>;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.util.Log;
+
+public class Tester extends TesterBase {
+	private static String tag = "Tester";
+	private Context testerContext;
+	private static String current<#=  entityName #><#=  firstColumnName #>;
+	private ContentResolver cr;
+	private ITesterReportBack rb;
+	private Resources res;
+
+	public Tester(Context ctx, ITesterReportBack rb) {
+		super(ctx);
+		this.cr = ctx.getContentResolver();
+		testerContext = ctx;
+		this.rb = rb;
+		res = testerContext.getResources();
+	}
+
+	// *****************************************************************************
+	// Show All <#= tableName #> on a separate thread
+	// *****************************************************************************
+	public void show<#= tableName #>() {
+		reportClear();
+		new ShowAll<#= tableName #>AsyncTask("", testerContext,
+				new All<#= tableName #>LoadedListener()).execute();
+	}
+
+	public interface All<#= tableName #>LoadedListenerInterface {
+		public void onAll<#= tableName #>Loaded(Cursor cursor);
+	}
+
+	public class ShowAll<#= tableName #>AsyncTask extends
+			AsyncTask<Object, Object, String> {
+		String idParameterString;
+		private Cursor cursor;
+
+		// listener for retrieved <#= entityName #>List
+		private All<#= tableName #>LoadedListener all<#= tableName #>LoadedListener;
+
+		public ShowAll<#= tableName #>AsyncTask(
+				String idParameterString,
+				Context context,
+				<#= packageName #>.Tester.All<#= tableName #>LoadedListenerInterface all<#= tableName #>LoadedListener) {
+			this.idParameterString = idParameterString;
+			this.all<#= tableName #>LoadedListener = (All<#= tableName #>LoadedListener) all<#= tableName #>LoadedListener;
+		}
+
+		// Call <#= entityName #>Service to get <#= entityName #>List
+		@Override
+		protected String doInBackground(Object... params) {
+			try {
+				Uri get_all_<#= tableNameLower #>_uri = Uri.parse(res
+						.getString(R.string.<#= tableNameLower #>_provider));
+
+				cursor = cr.query(get_all_<#= tableNameLower #>_uri, null, null, null, null);
+
+			} catch (Exception e) {
+				Log.e("log_tag", "Error querying DB " + e.toString());
+			}
+
+			return "";
+		}
+
+		// executed back on the UI thread after the city name loads
+		protected void onPostExecute(String domainString) {
+			all<#= tableName #>LoadedListener.onAll<#= tableName #>Loaded(cursor);
+		}
+	}
+
+	// listens for <#= tableNameLower #> loaded in background task
+	public class All<#= tableName #>LoadedListener implements
+			All<#= tableName #>LoadedListenerInterface {
+
+		public All<#= tableName #>LoadedListener() {
+		}
+
+		@Override
+		public void onAll<#= tableName #>Loaded(Cursor cursor) {
+
+			int numberOfRecords = cursor.getCount();
+			reportString("Num of <#= tableName #>: " + numberOfRecords);
+
+<#
+	PushIndent("\t");
+   int i = 0;
+   foreach (Column column in table.Columns)
+   {
+#>	 
+		int i<#= column.Name #> = cursor
+				.getColumnIndex(<#= tableName #>ProviderMetaData.<#= tableName #>TableMetaData.<#= tableNameUpper #>_<#= column.Name.ToUpper() #>);
+<#	  
+     i++;
+   }
+   PopIndent();
+#>
+
+			for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor
+					.moveToNext()) {
+				// Gather values
+				String <#= firstColumnName #> = cursor.getString(i<#= firstColumnName #>);
+				current<#= entityName #><#= firstColumnName #> = <#= firstColumnName #>;
+<#
+	PushIndent("\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+  	if (i != 1) {
+#>	 
+         String <#= column.Name #> = cursor.getString(i<#= column.Name #>);
+<#	  
+    }
+     i++;
+   }
+   PopIndent();
+#>				
+
+				// Report or log the row
+				StringBuffer cbuf = new StringBuffer(<#= firstColumnName #>);
+<#
+	PushIndent("\t\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+#>	 
+      cbuf.append(", ").append(<#= column.Name #>);
+<#	  
+     i++;
+   }
+   PopIndent();
+#>
+				reportString(cbuf.toString());
+			}
+
+			// Close the cursor
+			// ideally this should be done in
+			// a finally block.
+			cursor.close();
+		}
+	}
+
+	// *****************************************************************************
+	// Show One <#= entityName #> on a separate thread
+	// *****************************************************************************
+	public void showOne<#= entityName #>() {
+		reportClear();
+		new ShowOne<#= entityName #>AsyncTask("", testerContext,
+				new One<#= entityName #>LoadedListener()).execute();
+	}
+
+	public interface One<#= entityName #>LoadedListenerInterface {
+		public void onOne<#= entityName #>Loaded(Cursor cursor);
+	}
+
+	public class ShowOne<#= entityName #>AsyncTask extends
+			AsyncTask<Object, Object, String> {
+		String idParameterString;
+		private Cursor cursor;
+
+		// listener for retrieved <#= entityName #>List
+		private One<#= entityName #>LoadedListener one<#= entityName #>LoadedListener;
+
+		public ShowOne<#= entityName #>AsyncTask(
+				String idParameterString,
+				Context context,
+				<#= packageName #>.Tester.One<#= entityName #>LoadedListenerInterface one<#= entityName #>LoadedListener) {
+			this.idParameterString = idParameterString;
+			this.one<#= entityName #>LoadedListener = (One<#= entityName #>LoadedListener) one<#= entityName #>LoadedListener;
+		}
+
+		// Call <#= entityName #>Service to get <#= entityName #>List
+		@Override
+		protected String doInBackground(Object... params) {
+			Uri get_all_<#= tableNameLower #>_uri = Uri.parse(res
+					.getString(R.string.<#= tableNameLower #>_provider));
+			Uri showOneUri = Uri.withAppendedPath(get_all_<#= tableNameLower #>_uri,
+					current<#= entityName #><#= firstColumnName #>);
+			cursor = cr.query(showOneUri, null, null, null, null);
+
+			return "";
+		}
+
+		// executed back on the UI thread after the city name loads
+		protected void onPostExecute(String domainString) {
+			one<#= entityName #>LoadedListener.onOne<#= entityName #>Loaded(cursor);
+		}
+	}
+
+	// listens for <#= tableNameLower #> loaded in background task
+	public class One<#= entityName #>LoadedListener implements
+			One<#= entityName #>LoadedListenerInterface {
+
+		public One<#= entityName #>LoadedListener() {
+		}
+
+		@Override
+		public void onOne<#= entityName #>Loaded(Cursor cursor) {
+
+			// Report how many rows have been read
+			int numberOfRecords = cursor.getCount();
+
+			// Display each <#= entityName #>
+<#
+	PushIndent("\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+#>	 
+		int i<#= column.Name #> = cursor
+				.getColumnIndex(<#= tableName #>ProviderMetaData.<#= tableName #>TableMetaData.<#= tableNameUpper #>_<#= column.Name.ToUpper() #>);
+<#	  
+     i++;
+   }
+   PopIndent();
+#>
+
+			if (numberOfRecords == 1) {
+				cursor.moveToFirst();
+				String <#= firstColumnName #> = cursor.getString(i<#= firstColumnName #>);
+				current<#= entityName #><#= firstColumnName #> = <#= firstColumnName #>;
+<#
+	PushIndent("\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+  	if (i != 1) {
+#>	 
+         String <#= column.Name #> = cursor.getString(i<#= column.Name #>);
+<#	  
+    }
+     i++;
+   }
+   PopIndent();
+#>
+
+				// Report or log the row
+				StringBuffer cbuf = new StringBuffer(<#= firstColumnName #>);
+<#
+	PushIndent("\t\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+#>	 
+      cbuf.append(", ").append(<#= column.Name #>);
+<#	  
+     i++;
+   }
+   PopIndent();
+#>
+				reportString(cbuf.toString());
+			} else {
+				reportString("Error: Exactly 1 <#= entityName #> not returned from showOne<#= entityName #>() method.");
+			}
+
+			// Close the cursor
+			// ideally this should be done in
+			// a finally block.
+			cursor.close();
+
+		}
+	}
+
+	// *****************************************************************************
+	// Add <#= entityName #> on a separate thread
+	// *****************************************************************************
+	public void add<#= entityName #>() {
+		reportClear();
+		new Add<#= entityName #>AsyncTask("", testerContext, new <#= entityName #>AddedListener())
+				.execute();
+	}
+
+	public interface <#= entityName #>AddedListenerInterface {
+		public void on<#= entityName #>Added(String current<#= entityName #>Id);
+	}
+
+	public class Add<#= entityName #>AsyncTask extends AsyncTask<Object, Object, String> {
+		String idParameterString;
+
+		// listener for retrieved <#= entityName #>List
+		private <#= entityName #>AddedListener contactAddedListener;
+
+		public Add<#= entityName #>AsyncTask(
+				String idParameterString,
+				Context context,
+				<#= packageName #>.Tester.<#= entityName #>AddedListenerInterface contactAddedListener) {
+			this.idParameterString = idParameterString;
+			this.contactAddedListener = (<#= entityName #>AddedListener) contactAddedListener;
+		}
+
+		// Call <#= entityName #>Service to get <#= entityName #>List
+		@Override
+		protected String doInBackground(Object... params) {
+
+			Log.d(tag, "Adding a book");
+			ContentValues cv = new ContentValues();
+			cv.put(<#= tableName #>ProviderMetaData.<#= tableName #>TableMetaData.<#= tableNameUpper #>_<#= firstColumnName.ToUpper() #>, "0");
+<#
+	PushIndent("\t\t\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 1) {
+	     WriteLine(string.Format("cv.put({0}ProviderMetaData.{1}TableMetaData.{2}_{3},\"{4}\");", tableName, tableName, tableNameUpper, column.Name.ToUpper(), GenAddRowValues(column)));
+     }
+     i++;
+   }
+   PopIndent();
+#>
+			Uri get_all_<#= tableNameLower #>_uri = Uri.parse(res
+					.getString(R.string.<#= tableNameLower #>_provider));
+			Uri insertUri = Uri.withAppendedPath(get_all_<#= tableNameLower #>_uri, "0");
+			Uri insertedUri = cr.insert(insertUri, cv);
+			current<#= entityName #><#= firstColumnName #> = insertedUri.getPathSegments().get(1);
+
+			return "";
+		}
+
+		// executed back on the UI thread after the city name loads
+		protected void onPostExecute(String domainString) {
+			contactAddedListener.on<#= entityName #>Added(current<#= entityName #><#= firstColumnName #>);
+		}
+	}
+
+	// listens for <#= tableNameLower #> loaded in background task
+	public class <#= entityName #>AddedListener implements <#= entityName #>AddedListenerInterface {
+
+		public <#= entityName #>AddedListener() {
+		}
+
+		@Override
+		public void on<#= entityName #>Added(String Id) {
+			reportString("<#= entityName #> Added: " + current<#= entityName #><#= firstColumnName #>);
+		}
+	}
+
+	// *****************************************************************************
+	// Update <#= entityName #> on a separate thread
+	// *****************************************************************************
+	public void update<#= entityName #>() {
+		reportClear();
+		new Update<#= entityName #>AsyncTask("", testerContext,
+				new <#= entityName #>UpdatedListener()).execute();
+	}
+
+	public interface <#= entityName #>UpdatedListenerInterface {
+		public void on<#= entityName #>Updated(String current<#= entityName #>Id);
+	}
+
+	public class Update<#= entityName #>AsyncTask extends
+			AsyncTask<Object, Object, String> {
+		String idParameterString;
+
+		// listener for retrieved <#= entityName #>List
+		private <#= entityName #>UpdatedListener contactUpdatedListener;
+
+		public Update<#= entityName #>AsyncTask(
+				String idParameterString,
+				Context context,
+				<#= packageName #>.Tester.<#= entityName #>UpdatedListenerInterface contactUpdatedListener) {
+			this.idParameterString = idParameterString;
+			this.contactUpdatedListener = (<#= entityName #>UpdatedListener) contactUpdatedListener;
+		}
+
+		// Call <#= entityName #>Service to get <#= entityName #>List
+		@Override
+		protected String doInBackground(Object... params) {
+
+			Log.d(tag, "Updating a <#= entityName #>");
+			ContentValues cv = new ContentValues();
+			cv.put(<#= tableName #>ProviderMetaData.<#= tableName #>TableMetaData.<#= tableNameUpper #>_<#= firstColumnName.ToUpper() #>, current<#=  entityName #><#=  firstColumnName #>);
+<#
+	PushIndent("\t\t\t");
+   i = 1;
+   foreach (Column column in table.Columns)
+   {
+     if (i != 1) {
+      WriteLine(string.Format("cv.put({0}ProviderMetaData.{1}TableMetaData.{2}_{3},\"{4}\");", tableName, tableName, tableNameUpper, column.Name.ToUpper(), GenUpdateRowValues(column)));
+     }
+     i++;
+   }
+   PopIndent();
+#>
+			Uri get_all_<#= tableNameLower #>_uri = Uri.parse(res
+					.getString(R.string.<#= tableNameLower #>_provider));
+			Uri updateUri = Uri.withAppendedPath(get_all_<#= tableNameLower #>_uri,
+					current<#= entityName #><#= firstColumnName #>);
+			String[] selectionArgs = new String[1];
+			selectionArgs[0] = "";
+			cr.update(updateUri, cv, "", selectionArgs);
+
+			return "";
+		}
+
+		// executed back on the UI thread after the city name loads
+		protected void onPostExecute(String domainString) {
+			contactUpdatedListener.on<#= entityName #>Updated(current<#= entityName #><#= firstColumnName #>);
+		}
+	}
+
+	// listens for <#= tableNameLower #> loaded in background task
+	public class <#= entityName #>UpdatedListener implements
+			<#= entityName #>UpdatedListenerInterface {
+
+		public <#= entityName #>UpdatedListener() {
+		}
+
+		@Override
+		public void on<#= entityName #>Updated(String Id) {
+			reportString("<#= entityName #> Updated: " + current<#= entityName #><#= firstColumnName #>);
+		}
+	}
+
+	// *****************************************************************************
+	// Remove <#= entityName #> on a separate thread
+	// *****************************************************************************
+	public void remove<#= entityName #>() {
+		reportClear();
+		new Delete<#= entityName #>AsyncTask("", testerContext,
+				new <#= entityName #>DeletedListener()).execute();
+	}
+
+	public interface <#= entityName #>DeletedListenerInterface {
+		public void on<#= entityName #>Deleted(Cursor cursor);
+	}
+
+	public class Delete<#= entityName #>AsyncTask extends
+			AsyncTask<Object, Object, String> {
+		String idParameterString;
+		private Cursor cursor;
+
+		// listener for retrieved <#= entityName #>List
+		private <#= entityName #>DeletedListener contactDeletedListener;
+
+		public Delete<#= entityName #>AsyncTask(
+				String idParameterString,
+				Context context,
+				<#= packageName #>.Tester.<#= entityName #>DeletedListenerInterface contactDeletedListener) {
+			this.idParameterString = idParameterString;
+			this.contactDeletedListener = (<#= entityName #>DeletedListener) contactDeletedListener;
+		}
+
+		// Call <#= entityName #>Service to get <#= entityName #>List
+		@Override
+		protected String doInBackground(Object... params) {
+
+			Uri get_all_<#= tableNameLower #>_uri = Uri.parse(res
+					.getString(R.string.<#= tableNameLower #>_provider));
+			Uri delUri = Uri.withAppendedPath(get_all_<#= tableNameLower #>_uri,
+					current<#= entityName #><#= firstColumnName #>);
+			cr.delete(delUri, null, null);
+
+			return "";
+		}
+
+		// executed back on the UI thread after the city name loads
+		protected void onPostExecute(String domainString) {
+			contactDeletedListener.on<#= entityName #>Deleted(cursor);
+		}
+	}
+
+	// listens for <#= tableNameLower #> loaded in background task
+	public class <#= entityName #>DeletedListener implements
+			<#= entityName #>DeletedListenerInterface {
+
+		public <#= entityName #>DeletedListener() {
+		}
+
+		@Override
+		public void on<#= entityName #>Deleted(Cursor cursor) {
+			reportString("<#= entityName #> Deleted: " + current<#= entityName #><#= firstColumnName #>);
+		}
+	}
+
+	// *****************************************************************************
+	// Helpers
+	// *****************************************************************************
+
+	private void reportString(String s) {
+		rb.reportBack(tag, s);
+	}
+
+	private void reportClear() {
+		rb.clear();
+	}
+}
+
+<#+
+    public void HelloWorld()
+    {
+        this.Write("Hello World");
+    }
+
+    public static Random random = new Random((int)DateTime.Now.Ticks);
+    public string RandomString(int size)
+   {
+      StringBuilder builder = new StringBuilder();
+      char ch;
+      for (int i = 0; i < size; i++)
+      {
+         ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 65)));
+         builder.Append(ch);
+      }
+
+   return builder.ToString();
+   }
+
+    public int RandomNumber(int min, int max)
+   {
+      Random random = new Random();
+      return random.Next(min, max); 
+   }
+
+    public string GenAddRowValues(Column col)
+	{
+		string colDataTypeName = col.DataType.Name;
+		string addRowValue = string.Empty;
+		
+		switch (colDataTypeName)
+		{
+			case "bigint":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+         case "bit":
+            addRowValue = "true";
+            break;
+         case "datetime":
+		      addRowValue = "1/1/2012";
+				break;
+			case "decimal":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "int":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "money":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "numeric":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smalldatetime":
+            addRowValue = "1/2/2012";
+				break;
+			case "smallint":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smallmoney":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "tinyint":
+		      addRowValue = RandomNumber(1, 100).ToString();
+				break;
+         // all the string types
+         default:
+            addRowValue = RandomString(5);
+            break;
+      }
+
+      return addRowValue;
+	}
+
+    public string GenUpdateRowValues(Column col)
+	{
+		string colDataTypeName = col.DataType.Name;
+		string updateRowValue = string.Empty;
+		
+		switch (colDataTypeName)
+		{
+			case "bigint":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+         case "bit":
+            updateRowValue = "false";
+            break;
+         case "datetime":
+		      updateRowValue = "12/25/2012";
+				break;
+			case "decimal":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "int":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "money":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "numeric":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smalldatetime":
+            updateRowValue = "12/31/2012";
+				break;
+			case "smallint":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "smallmoney":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+			case "tinyint":
+		      updateRowValue = RandomNumber(1, 100).ToString();
+				break;
+         // all the string types
+         default:
+            updateRowValue = RandomString(5);
+            break;
+		}
+
+      return updateRowValue;
+	}    
+#>

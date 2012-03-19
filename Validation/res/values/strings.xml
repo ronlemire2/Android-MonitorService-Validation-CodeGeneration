@@ -1,0 +1,49 @@
+<!-- Copyright 2011 The Android Open Source Project Licensed under the Apache 
+	License, Version 2.0 (the "License"); you may not use this file except in 
+	compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 
+	Unless required by applicable law or agreed to in writing, software distributed 
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
+	the specific language governing permissions and limitations under the License. -->
+
+<resources>
+	<string name="app_name">Validation</string>
+	<string name="alternate_title">An alternate title that is long</string>
+	<string name="toggle_title">Toggle title</string>
+
+	<string name="label_firstname">*FirstName</string>
+	<string name="label_email">*Email</string>
+	<string name="label_phone">*Phone</string>
+	<string name="label_zipcode">*ZipCode</string>
+	<string name="label_date">*Date</string>
+
+	<string name="hint_required">(required)</string>
+	<string name="hint_email">email@domain.com</string>
+	<string name="hint_phone">999-999-9999</string>
+	<string name="hint_zipcode">99999-9999</string>
+	<string name="hint_date">mm/dd/yyyy</string>
+	<string name="hint_OutMessage">Return Message</string>
+	
+	<string name="err_required"> is required</string>
+	<string name="err_format"> has incorrect format</string>
+
+	<string name="asterisk">*</string>
+	<string name="returnMessage">Return</string>
+
+	<string name="menu_refresh">Refresh</string>
+	<string name="menu_search">Search</string>
+	<string name="menu_share">Share</string>
+
+<!-- 	http://www.zunisoft.com/2009/08/android-input-validation.html -->
+	<string name="regex_email">^([^@\\s]+)@((?:[-a-z0-9]+\\.)+[a-z]{2,})$</string>
+	<string name="regex_phone">^\\(?\\d{3}[\\)?|-]\\d{3}[-]\\d{4}((\\s=?)(ext\\.|x)\\d{1,4})?$</string>
+	<string name="regex_postal_code">^\\d{5}(-\\d{4})?$</string>
+	
+<!-- 	http://regexlib.com/DisplayPatterns.aspx?cattabindex=4&categoryId=5 Dany Lauener - Note: all backslashes had to be doubled! -->
+	<string name="regex_date">^(((0?[1-9]|1[012])/(0?[1-9]|1\\d|2[0-8])|(0?[13456789]|1[012])/(29|30)|(0?[13578]|1[02])/31)/(19|[2-9]\\d)\\d{2}|0?2/29/((19|[2-9]\\d)(0[48]|[2468][048]|[13579][26])|(([2468][048]|[3579][26])00)))$</string>
+	
+	
+	
+	
+	
+</resources>

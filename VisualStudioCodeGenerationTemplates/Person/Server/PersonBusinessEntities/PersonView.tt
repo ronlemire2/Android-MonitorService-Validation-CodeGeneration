@@ -1,0 +1,42 @@
+﻿<#@ template language="C#" hostspecific="True" debug="True" #>
+<#@ output extension="cs" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+   
+   string entityName = "Person";
+   string beLibraryName = "PersonBusinessEntities";
+#>
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace <#= beLibraryName #>
+{
+   public class <#= entityName #>View
+   {
+<#
+	PushIndent("\t\t");
+   int i = 1;
+   foreach (Column column in table.Columns)
+   {
+	  if (i == 1) {
+	     WriteLine("public  int " + column.Name + "{ get; set; }");
+	  }
+     else {
+	     WriteLine("public  string " + column.Name + "{ get; set; }");
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+   }
+}

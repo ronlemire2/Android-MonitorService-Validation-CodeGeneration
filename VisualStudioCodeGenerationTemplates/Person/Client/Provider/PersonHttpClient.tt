@@ -1,0 +1,303 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#@ Assembly Name="Microsoft.SqlServer.ConnectionInfo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Smo" #>
+<#@ Assembly Name="Microsoft.SqlServer.Management.Sdk.Sfc" #>
+<#@ Assembly Name="System.Xml" #>
+<#@ Import Namespace="Microsoft.SqlServer.Management.Smo" #>
+<#
+	Server server = new Server("Neo");
+   Database database = new Database(server, "Person");
+   Table table = new Table(database, "Person");
+   table.Refresh();
+
+   string packageName = "dev.ronlemire.personprovider";
+   string entityName = "Person";
+   string entityInstanceName = "person";
+   string tableName = "Person";
+   string tableNameCaps = "PERSON";
+#>
+<#
+	string firstColumnName = "";
+   foreach (Column column in table.Columns)
+   {
+	  firstColumnName = column.Name;
+      break;
+   }                                                                                 
+#>
+package <#= packageName #>;
+
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONStringer;
+
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.net.Uri;
+import android.util.Log;
+
+public class <#= tableName #>HttpClient {
+	private static final String TAG = <#= tableName #>HttpClient.class.getSimpleName();
+	private String multiple<#= tableName #>Url = "";
+	private String single<#= tableName #>Url = "";
+	private Uri content_uri;
+	private ContentResolver cr;
+	private static final int COL_VALUE_IX = 3;
+	
+	// *****************************************************************************
+	// Constructor - get URLs from Shared Preferences
+	// *****************************************************************************
+	// TODO: pass in URLs
+	public <#= tableName #>HttpClient(Context context) {
+		Resources res = context.getResources();
+		content_uri = Uri.parse(res.getString(R.string.config_provider));
+		cr = context.getContentResolver();
+		
+		multiple<#= tableName #>Url = GetSetting("MULTIPLE_<#= tableNameCaps #>_URL");
+		single<#= tableName #>Url = GetSetting("SINGLE_<#= tableNameCaps #>_URL");
+		Log.i(TAG, "<#= tableName #>HttpClient constructor");
+	}
+
+	private String GetSetting(String name) {
+		String settingName = name;
+		String msg = "";
+		try {
+			Cursor c = cr.query(content_uri, null, "name=?",
+					new String[] { settingName }, null);
+			Log.v("CHECK 1", "CHECK 1");
+			if (c == null) {
+				msg += "Null cursor";
+			} else if (c.moveToFirst()) {
+				String vl = c.getString(COL_VALUE_IX);
+				msg += vl;
+			} else {
+				msg += "No records in cursor";
+			}
+		} catch (Exception ex) {
+			msg += "Database Exception";
+		}
+		
+		return msg;
+	}
+
+	// *****************************************************************************
+	// If Id is zero(0) get ContactList using HTTP GET method with
+	// multipleContactUrl.
+	// If Id is non-zero get Contact using HTTP GET method with
+	// singleContactUrl.
+	// ContactService will return a Contact[] in either case.
+	// If getting a specific Contact, the Contact[] will contain only 1 Contact.
+	// *****************************************************************************
+	public <#= entityName #>[] Get<#= entityName #>Array(String <#= firstColumnName #>) {
+		List<<#= entityName #>> <#= entityInstanceName #>List = new ArrayList<<#= entityName #>>();
+		<#= entityName #>[] <#= entityInstanceName #>Array = null;
+<#
+	PushIndent("\t\t");
+   int i = 0;
+   foreach (Column column in table.Columns)
+   {
+     WriteLine(string.Format("String {0}String = \"\";", column.Name));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+		String urlString = "";
+
+		if (<#= firstColumnName #> == "0") {
+			urlString = multiple<#= tableName #>Url;
+		} else {
+			urlString = single<#= tableName #>Url + <#= firstColumnName #>;
+		}
+
+		try {
+			HttpGet request = new HttpGet(urlString);
+			request.setHeader("Accept", "application/json");
+			request.setHeader("Content-type", "application/json");
+			DefaultHttpClient httpClient = new DefaultHttpClient();
+			HttpResponse response = httpClient.execute(request);
+			HttpEntity responseEntity = response.getEntity();
+
+			// Read response data into buffer
+			char[] buffer = new char[(int) responseEntity.getContentLength()];
+			InputStream stream = responseEntity.getContent();
+			InputStreamReader reader = new InputStreamReader(stream);
+			reader.read(buffer);
+			stream.close();
+
+			JSONArray jsonArray = new JSONArray(new String(buffer));
+			try {
+				for (int i = 0; i < jsonArray.length(); i++) {
+					JSONObject e = jsonArray.getJSONObject(i);
+<#
+	PushIndent("\t\t\t\t\t");
+   i = 0;
+   foreach (Column column in table.Columns)
+   {
+     WriteLine(string.Format("{0}String = e.getString(\"{1}\");", column.Name, column.Name));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+					<#= entityInstanceName #>List.add(new <#= entityName #>(
+<#
+	PushIndent("\t\t\t\t\t\t");
+   i = 0;
+   int fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	   WriteLine(string.Format("{0}String{1}", column.Name, i == fldCount-1 ? "" : ","));
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+               ));
+				}
+				int <#= entityInstanceName #>ListSize = <#= entityInstanceName #>List.size();
+				<#= entityInstanceName #>Array = new <#= entityName #>[<#= entityInstanceName #>ListSize];
+				for (int i = 0; i < <#= entityInstanceName #>ListSize; i++) {
+					<#= entityInstanceName #>Array[i] = (<#= entityName #>) <#= entityInstanceName #>List.get(i);
+				}
+			} catch (JSONException e) {
+				Log.e("log_tag", "Error parsing data " + e.toString());
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+		}
+		return <#= entityInstanceName #>Array;
+	}
+
+	// *****************************************************************************
+	// Save <#= entityName #> using HTTP PUT method with singleContactUrl.
+	// If Id is zero(0) a new <#= entityName #> will be added.
+	// If Id is non-zero an existing <#= entityName #> will be updated.
+	// HTTP POST could be used to add a new <#= entityName #> but the <#= entityName #>Service knows
+	// an Id of zero means a new <#= entityName #> so in this case the HTTP PUT is used.
+	// *****************************************************************************
+	public Integer Save<#= entityName #>(<#= entityName #> save<#= entityName #>) {
+		Integer statusCode = 0;
+		HttpResponse response;
+
+		try {
+			boolean isValid = true;
+
+			// Data validation goes here
+
+			if (isValid) {
+
+				// POST request to <service>/SaveVehicle
+				HttpPut request = new HttpPut(single<#= tableName #>Url
+						+ save<#= entityName #>.get<#= firstColumnName #>());
+				request.setHeader("User-Agent", "dev.ronlemire.contactClient");
+				request.setHeader("Accept", "application/json");
+				request.setHeader("Content-type", "application/json");
+
+				// Build JSON string
+				JSONStringer <#= entityInstanceName #> = new JSONStringer().object()
+<#
+	PushIndent("\t\t\t\t\t");
+   i = 1;
+   fldCount = table.Columns.Count;
+   foreach (Column column in table.Columns)
+   {
+	  if (i == 1) {
+	     WriteLine(string.Format(".key(\"{0}\").value(Integer.parseInt(save{1}.get{2}()))", column.Name, entityName, column.Name));
+	  }
+     else {
+	     WriteLine(string.Format(".key(\"{0}\").value(save{1}.get{2}())", column.Name, entityName, column.Name));
+     }
+     i++;
+   }                                                                                 
+   PopIndent();
+#>
+					.endObject();
+				StringEntity entity = new StringEntity(<#= entityInstanceName #>.toString());
+
+				request.setEntity(entity);
+
+				// Send request to WCF service
+				DefaultHttpClient httpClient = new DefaultHttpClient();
+				response = httpClient.execute(request);
+
+				Log.d("WebInvoke", "Saving : "
+						+ response.getStatusLine().getStatusCode());
+
+				// statusCode =
+				// Integer.toString(response.getStatusLine().getStatusCode());
+				statusCode = response.getStatusLine().getStatusCode();
+
+				if (save<#= entityName #>.get<#= firstColumnName #>().equals("0")) {
+					// New <#= entityName #>.Id is in buffer
+					HttpEntity responseEntity = response.getEntity();
+					char[] buffer = new char[(int) responseEntity
+							.getContentLength()];
+					InputStream stream = responseEntity.getContent();
+					InputStreamReader reader = new InputStreamReader(stream);
+					reader.read(buffer);
+					stream.close();
+					statusCode = Integer.parseInt(new String(buffer));
+				} else {
+					statusCode = response.getStatusLine().getStatusCode();
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return statusCode;
+	}
+
+	// *****************************************************************************
+	// Delete <#= entityName #> using HTTP DELETE method with single<#= entityName #>Url.
+	// *****************************************************************************
+	public Integer Delete<#= entityName #>(<#= entityName #> delete<#= entityName #>) {
+		Integer statusCode = 0;
+		HttpResponse response;
+
+		try {
+			boolean isValid = true;
+
+			// Data validation goes here
+
+			if (isValid) {
+				HttpDelete request = new HttpDelete(single<#= tableName #>Url
+						+ delete<#= entityName #>.get<#= firstColumnName #>());
+				request.setHeader("User-Agent", "<#= packageName #>");
+				request.setHeader("Accept", "application/json");
+				request.setHeader("Content-type", "application/json");
+
+				// Send request to WCF service
+				DefaultHttpClient httpClient = new DefaultHttpClient();
+				response = httpClient.execute(request);
+
+				Log.d("WebInvoke", "Saving : "
+						+ response.getStatusLine().getStatusCode());
+
+				statusCode = response.getStatusLine().getStatusCode();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return statusCode;
+	}
+	
+}

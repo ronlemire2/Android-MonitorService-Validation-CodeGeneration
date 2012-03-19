@@ -1,0 +1,15 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ output extension=".java" #>
+<#
+   string packageName = "dev.ronlemire.personprovider";
+#>
+package <#= packageName #>;
+/*
+ * An interface implemented typically by an activity
+ * so that a worker class can report back
+ * on what happened.
+ */
+public interface ITesterReportBack {
+	public void reportBack(String tag, String message);
+	public void clear();
+}
